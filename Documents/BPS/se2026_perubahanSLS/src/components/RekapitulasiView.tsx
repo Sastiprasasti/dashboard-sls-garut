@@ -15,22 +15,21 @@ export const RekapitulasiView: React.FC<RekapitulasiViewProps> = ({ onSelectKeca
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [lastRefreshed, setLastRefreshed] = useState<string>(new Date().toLocaleTimeString("id-ID"));
   useEffect(() => {
-    dataService.syncRekapData().then((data) => {
-      if (data && data.length > 0) {
-        setRekapData(data);
+    // Tarik data kecamatan & rekap secara langsung saat komponen dimuat
+    dataService.syncRekapData().then((res) => {
+      if (res && res.length > 0) {
+        setRekapData(res);
       }
     });
   }, []);
 
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
     setIsRefreshing(true);
-    setTimeout(() => {
-      const refreshed = dataService.getRekapitulasi();
-      setRekapData(refreshed);
-      setLastRefreshed(new Date().toLocaleTimeString("id-ID"));
-      setIsRefreshing(false);
-      showToast("info", "Data Diperbarui", "Rekapitulasi 42 Kecamatan berhasil disinkronkan.");
-    }, 400);
+    const refreshed = await dataService.syncRekapData();
+    setRekapData(refreshed);
+    setLastRefreshed(new Date().toLocaleTimeString("id-ID"));
+    setIsRefreshing(false);
+    showToast("info", "Data Diperbarui", "Rekapitulasi 42 Kecamatan berhasil disinkronkan.");
   };
 
   const filteredData = useMemo(() => {

@@ -86,8 +86,37 @@ export const dataService = {
   },
 
   syncRekapData: async () => {
-    await initializeDataCache();
-    return cachedRekap;
+    try {
+      let { data: kecList } = await supabase.from("Kecamatan").select("*").order("kdkec", { ascending: true });
+
+      if (!kecList || kecList.length === 0) {
+        const retry = await supabase.from("kecamatan").select("*").order("kdkec", { ascending: true });
+        kecList = retry.data || [];
+      }
+
+      const { data: desaList } = await supabase.from("Desa").select("*").order("kddesa", { ascending: true });
+
+      if (desaList) cachedDesa = desaList;
+
+      if (kecList && kecList.length > 0) {
+        cachedRekap = kecList.map((k: any) => ({
+          kdkec: String(k.kdkec || ""),
+          nmkec: String(k.nmkec || ""),
+          totalSls: Number(k.totalSls) || 0,
+          totalPemekaran: 0,
+          totalPenggabungan: 0,
+          totalPerubahanNama: 0,
+          totalPerubahanBatas: 0,
+          totalWilayahTertukar: 0,
+          totalAdaPerubahan: 0,
+        }));
+      }
+
+      return cachedRekap;
+    } catch (err) {
+      console.error("Gagal sinkron data rekap:", err);
+      return [];
+    }
   },
 
   getRekapDesaList: (kdkec: string) => {
