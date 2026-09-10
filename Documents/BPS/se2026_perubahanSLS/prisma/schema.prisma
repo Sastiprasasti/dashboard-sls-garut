@@ -1,0 +1,50 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Kecamatan {
+  kdkec     String   @id // contoh: "010"
+  nmkec     String   // contoh: "CISEWU"
+  desas     Desa[]
+}
+
+model Desa {
+  kdkec     String
+  kddesa    String   // contoh: "006"
+  nmdesa    String   // contoh: "SUKAJAYA"
+  kecamatan Kecamatan @relation(fields: [kdkec], references: [kdkec])
+  sls       Sls[]
+
+  @@id([kdkec, kddesa])
+}
+
+model Sls {
+  id_sls                String   @id // Kolom 'Kode' (16 digit)
+  nama_sls              String   // Kolom 'Sub Satuan Lingkungan Setempat (Sub-SLS)'
+  jenis_sls             String   @default("SLS")
+  kdkec                 String
+  kddesa                String
+  
+  // Data Petugas (Tersimpan di DB, disembunyikan dari UI)
+  nama_ppl              String?
+  nama_pml              String?
+
+  desa                  Desa     @relation(fields: [kdkec, kddesa], references: [kdkec, kddesa])
+
+  // Kasus Perubahan SLS
+  pemekaran             Boolean  @default(false)
+  pemekaran_note        String?
+  penggabungan          Boolean  @default(false)
+  penggabungan_note     String?
+  perubahan_nama        Boolean  @default(false)
+  perubahan_nama_note   String?
+  perubahan_batas       Boolean  @default(false)
+  wilayah_tertukar      Boolean  @default(false)
+  wilayah_tertukar_note String?
+
+  updated_at            DateTime @updatedAt
+}

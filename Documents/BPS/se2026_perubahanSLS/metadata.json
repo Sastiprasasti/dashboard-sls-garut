@@ -1,0 +1,6 @@
+{
+  "name": "SE2026 - Perubahan SLS",
+  "description": "Aplikasi pendataan dan monitoring identifikasi perubahan SubSLS Kabupaten Garut (42 Kecamatan) untuk persiapan Sensus Ekonomi 2026.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
