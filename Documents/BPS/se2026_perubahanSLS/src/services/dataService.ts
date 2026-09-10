@@ -85,32 +85,30 @@ export const dataService = {
     return cachedRekap;
   },
 
+  // 1. Sinkronisasi data rekap kecamatan & desa dari Supabase
   syncRekapData: async () => {
     try {
-      let { data: kecList } = await supabase.from("Kecamatan").select("*").order("kdkec", { ascending: true });
+      // Ambil hasil agregasi langsung dari SQL View
+      const { data, error } = await supabase.from("v_rekap_kecamatan").select("*").order("kdkec", { ascending: true });
 
-      if (!kecList || kecList.length === 0) {
-        const retry = await supabase.from("kecamatan").select("*").order("kdkec", { ascending: true });
-        kecList = retry.data || [];
-      }
-
-      const { data: desaList } = await supabase.from("Desa").select("*").order("kddesa", { ascending: true });
-
-      if (desaList) cachedDesa = desaList;
-
-      if (kecList && kecList.length > 0) {
-        cachedRekap = kecList.map((k: any) => ({
+      if (!error && data && data.length > 0) {
+        cachedRekap = data.map((k: any) => ({
           kdkec: String(k.kdkec || ""),
           nmkec: String(k.nmkec || ""),
           totalSls: Number(k.totalSls) || 0,
-          totalPemekaran: 0,
-          totalPenggabungan: 0,
-          totalPerubahanNama: 0,
-          totalPerubahanBatas: 0,
-          totalWilayahTertukar: 0,
-          totalAdaPerubahan: 0,
+          totalPemekaran: Number(k.totalPemekaran) || 0,
+          totalPenggabungan: Number(k.totalPenggabungan) || 0,
+          totalPerubahanNama: Number(k.totalPerubahanNama) || 0,
+          totalPerubahanBatas: Number(k.totalPerubahanBatas) || 0,
+          totalWilayahTertukar: Number(k.totalWilayahTertukar) || 0,
+          totalAdaPerubahan: Number(k.totalAdaPerubahan) || 0,
         }));
       }
+
+      // Preload master Desa untuk dropdown dan expand baris
+      const { data: desaList } = await supabase.from("Desa").select("*").order("kddesa", { ascending: true });
+
+      if (desaList) cachedDesa = desaList;
 
       return cachedRekap;
     } catch (err) {
@@ -234,12 +232,15 @@ export const dataService = {
     return await dataService.saveSlsChanges(id_sls, payload);
   },
 
-  // 6. Global Stats
+  // 6. Global Stats Sidebar
   getGlobalStats: () => {
+    const totalSls = cachedRekap.reduce((acc, curr) => acc + (curr.totalSls || 0), 0);
+    const totalAdaPerubahan = cachedRekap.reduce((acc, curr) => acc + (curr.totalAdaPerubahan || 0), 0);
+
     return {
-      totalKecamatan: 42,
-      totalSls: 18551,
-      totalAdaPerubahan: 0,
+      totalKecamatan: cachedRekap.length || 42,
+      totalSls: totalSls > 0 ? totalSls : 18551,
+      totalAdaPerubahan,
     };
   },
 
